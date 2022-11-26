@@ -93,15 +93,20 @@ build_release: release_directories
 build_release_ninja: release_ninja_directories
 	cd ${release_ninja_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-g0 -O3" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(release_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
+
+
+asan_build_flags = -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope -fno-common
+asan_run_flags = LSAN_OPTIONS=verbosity=1:log_threads=1 ASAN_OPTIONS=verbosity=1:detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
+
 build_debug_asan: debug_asan_directories
-	cd ${debug_asan_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-g3 -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope -fno-common" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_asan_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-g3 -O0 ${asan_build_flags}" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 build_debug_ninja_asan: debug_ninja_asan_directories
-	cd ${debug_ninja_asan_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-g3 -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope -fno-common" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
+	cd ${debug_ninja_asan_build_dir} ; mkdir EXECUTABLES; cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-g3 -O0 ${asan_build_flags}" .. ; ninja && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_asan_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
 .PHONY: all
 
-clean: clean_debug clean_release clean_debug_asan
+clean: clean_debug clean_release clean_debug_asan clean_ninja
 
 clean_ninja: clean_debug_ninja clean_release_ninja clean_debug_ninja_asan
 
@@ -172,13 +177,11 @@ rebuild_test_debug_ninja:
 	make test_debug_ninja
 
 
-asan_flags = LSAN_OPTIONS=verbosity=1:log_threads=1 ASAN_OPTIONS=verbosity=1:detect_stack_use_after_return=1
-
 test_debug_asan: build_debug_asan
-	for file in $(debug_asan_executable_dir)/* ; do echo "testing $$file..." ; ${asan_flags} $$file ; echo "$$file returned with code $$?" ; done
+	for file in $(debug_asan_executable_dir)/* ; do echo "testing $$file..." ; ${asan_run_flags} $$file ; echo "$$file returned with code $$?" ; done
 
 test_debug_ninja_asan: build_debug_ninja_asan
-	for file in $(debug_asan_executable_dir)/* ; do echo "testing $$file..." ; ${asan_flags} $$file ; echo "$$file returned with code $$?" ; done
+	for file in $(debug_asan_executable_dir)/* ; do echo "testing $$file..." ; ${asan_run_flags} $$file ; echo "$$file returned with code $$?" ; done
 
 rebuild_test_debug_asan:
 	make clean_debug_asan
