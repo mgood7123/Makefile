@@ -205,7 +205,7 @@ rebuild_test_release_ninja:
 	make clean_release_ninja
 	make test_release_ninja
 
-valgrind_flags = --leak-check=full --show-leak-kinds=all -s --track-origins=yes
+valgrind_flags = --leak-check=full --show-leak-kinds=all --track-origins=yes
 
 test_valgrind: test_debug_valgrind test_release_valgrind
 test_ninja_valgrind: test_debug_ninja_valgrind test_release_ninja_valgrind
