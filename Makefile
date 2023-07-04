@@ -98,6 +98,8 @@ ifeq ($(CCOMPILER),)
     endif
 endif
 
+cmake_run_flags += "$(CMAKE_FLAGS)"
+
 build_debug: debug_directories
 	cd ${debug_build_dir} ; mkdir EXECUTABLES; cmake -DCMAKE_BUILD_TYPE=Debug $(cmake_run_flags) -DCMAKE_C_FLAGS_DEBUG="$(CFLAGS) -g3 -O0" -DCMAKE_CXX_FLAGS_DEBUG="$(CXXFLAGS) -g3 -O0" .. ; make && if test -e EXECUTABLES ; then cd EXECUTABLES; for file in * ; do mv -v $$file ../../$(debug_executable_dir)/$$FILE ; done ; cd ..; rmdir EXECUTABLES; fi
 
